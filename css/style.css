@@ -175,6 +175,16 @@ h1 {
   color: #2DF911;
 }
 
+.bottom-right {
+    position: absolute;
+    bottom: 20px;
+    right: 300px;
+	color: #2DF911;
+	background-color: #101721;
+	width: 600px;
+	height: 150px;
+	white-space: pre;
+}
 .animations a {
   line-height: 42px;
   display: block;

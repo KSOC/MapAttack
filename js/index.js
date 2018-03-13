@@ -2,6 +2,8 @@ CustomMarker.prototype = new google.maps.OverlayView();
 var map;
 var myArr;
 var i;
+var gmarkers = [];
+
 function CustomMarker(opts) {
     this.setValues(opts);
 }
@@ -30,11 +32,36 @@ CustomMarker.prototype.draw = function() {
         div.style.top = (point.y+25) + 'px';
     }
 };
+	var table;
+	
 function addMarker(p, arr){
-	setTimeout(function(){var marker = new CustomMarker({
+	table = document.getElementById("table");  // set this to your table
+	setTimeout(function(){
+		var tbody = document.createElement("tbody");
+		var row = document.createElement("tr");
+		var cell = document.createElement("td");
+		cell.textContent =  myArr.data[p].date + "\t\t" + myArr.data[p].source  + ":" + myArr.data[p].protocol + "\t\t" + myArr.data[p].geo.city + " " + myArr.data[p].geo.country_name;
+		//console.log(myArr.data[p].source);
+		row.appendChild(cell);
+		//console.log(table);
+		if(table.rows.length > 10){
+			gmarkers[0].div.remove();
+			//gmarkers[0].div.hidden = true;
+			table.deleteRow(0);
+			gmarkers.shift();	
+		}
+		table.appendChild(row);
+		var marker = new CustomMarker({
         position: new google.maps.LatLng(myArr.data[p].geo.latitude, myArr.data[p].geo.longitude),
         map: map
-      });}, i*1000);
+      });
+	  gmarkers.push(marker);
+	  //gmarkers.pop();
+	  
+	  }, p*9000);
+
+	
+	
 }
 var xmlhttp = new XMLHttpRequest();
 var url = "https://netman/api/honeypotlatest.php";
@@ -42,14 +69,17 @@ var url = "https://netman/api/honeypotlatest.php";
 
 function getHoney(){
 	xmlhttp.onreadystatechange = function() {
-	
-	
     if (this.readyState == 4 && this.status == 302) {
         myArr = JSON.parse(this.responseText);
-		console.log(xmlhttp);
-	
-		for(i=0, length = myArr.data.length; i<length;i++){
+		myArr.data.reverse();
+		//console.log(xmlhttp);
+		
+		for(i=0, length = myArr.data.length; i < length; i++){
+			
 			addMarker(i,myArr);
+			if(i == length-1){
+				setTimeout(function(){getHoney();},9000*myArr.data.length)
+			}	
 		}
 	}
 	};
