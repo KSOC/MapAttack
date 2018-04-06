@@ -1,9 +1,9 @@
 CustomMarker.prototype = new google.maps.OverlayView();
 var map;
-var myArr;
+var myArr = [];
 var i;
 var gmarkers = [];
-
+jwt = null;
 function CustomMarker(opts) {
     this.setValues(opts);
 }
@@ -40,19 +40,16 @@ function addMarker(p, arr){
 		var tbody = document.createElement("tbody");
 		var row = document.createElement("tr");
 		var cell = document.createElement("td");
-		cell.textContent =  myArr.data[p].date + "\t\t" + myArr.data[p].source  + ":" + myArr.data[p].protocol + "\t\t" + myArr.data[p].geo.city + " " + myArr.data[p].geo.country_name;
-		//console.log(myArr.data[p].source);
+		cell.textContent =  arr[p].date + "\t\t" + arr[p].source  + ":" + arr[p].protocol + "\t\t" + arr[p].geo.city + " " + arr[p].geo.country_name;
 		row.appendChild(cell);
-		//console.log(table);
 		if(table.rows.length > 10){
 			gmarkers[0].div.remove();
-			//gmarkers[0].div.hidden = true;
 			table.deleteRow(0);
 			gmarkers.shift();	
 		}
 		table.appendChild(row);
 		var marker = new CustomMarker({
-        position: new google.maps.LatLng(myArr.data[p].geo.latitude, myArr.data[p].geo.longitude),
+        position: new google.maps.LatLng(arr[p].geo.latitude, arr[p].geo.longitude),
         map: map
       });
 	  gmarkers.push(marker);
@@ -63,31 +60,70 @@ function addMarker(p, arr){
 	
 	
 }
-var xmlhttp = new XMLHttpRequest();
-var url = "https://netman/api/honeypotlatest.php";
 
+var url = "https://netman/api/honeypotlatest.php/";
 
-function getHoney(){
-	xmlhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 302) {
-        myArr = JSON.parse(this.responseText);
-		myArr.data.reverse();
-		//console.log(xmlhttp);
+	// query the api button action
+	function honeyPot(){
 		
-		for(i=0, length = myArr.data.length; i < length; i++){
-			
-			addMarker(i,myArr);
-			if(i == length-1){
-				setTimeout(function(){getHoney();},9000*myArr.data.length)
-			}	
+		var method = 'GET';
+		var data = {};
+		var success = function(response){
+			JSON.stringify(response, null, 4);
 		}
+		var failure = function(error) {
+			console.log("FAILED");
+			myArr = JSON.parse(error.responseText);
+			console.log(myArr.data);
+			myArr.data.reverse();
+		
+			for(i=0, length = myArr.data.length; i < length; i++){
+				
+				addMarker(i,myArr.data);
+				if(i == length-1){
+					setTimeout(function(){honeyPot();},9000*myArr.data.length)
+				}	
+			}
+		}
+		// run the api call specified and wait for its response
+		apicall(url, method, data, success, failure)
+		
+		
 	}
-	};
-	
-	xmlhttp.open("GET", url, true);
-	xmlhttp.send();
-	
-}
+
+	function apicall(url, method, data, goodcall, badcall) {
+		// if we have a JWT set, send it with the request
+		if(jwt != null) {
+			url = url + '?token=' + jwt;
+		}
+		
+		// call the ajax and wait for it to complete
+		var ajaxCall = $.ajax({
+			url: url,
+			method: method,
+			data: data,
+			success: function(data) {
+				console.log(data);
+				// this is some optional code to capture updated auth tokens as we make calls
+				var responseHeaders = ajaxCall.getAllResponseHeaders();
+				var regex = /authorization: Bearer ([a-zA-Z0-9_\-]*\.[a-zA-Z0-9_\-]*\.[a-zA-Z0-9_\-]*)/;
+				if(responseHeaders.match(regex)) {
+					jwt = responseHeaders.match(regex)[1];
+					
+				}else{
+					
+				}
+				// invoke the success callback function
+				goodcall(data);
+			},
+			error: function(error, errorThrown) {
+				
+				// invoke the failure callback function
+				badcall(error);
+			}
+		});
+		
+	}
 
 $(function() {
     var pos = new google.maps.LatLng(10, 0);
@@ -286,6 +322,6 @@ $(function() {
 
 	var marker, i;
 	
-	getHoney();
+	honeyPot();
   
 });
