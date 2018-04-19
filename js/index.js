@@ -7,7 +7,20 @@ jwt = null;
 function CustomMarker(opts) {
     this.setValues(opts);
 }
+function hideStuff(){
+	for (var i=0;i<200;i++){
+		console.log(i)
+	}
+	if (i=200){
+	$('.gm-style > div:nth-child(3) > a:nth-child(1)').hide();
+	$('.gmnoprint:nth-child(5)').hide();
+	$('.gmnoprint:nth-child(7)').hide();
+	}
+}
 
+	$(document).ready(hideStuff);
+
+	
 CustomMarker.prototype.draw = function() {
     var self = this;
     var div = this.div;
@@ -126,6 +139,7 @@ var url = "https://netman/api/honeypotlatest.php/";
 	}
 
 $(function() {
+	
     var pos = new google.maps.LatLng(10, 0);
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 2.78,
